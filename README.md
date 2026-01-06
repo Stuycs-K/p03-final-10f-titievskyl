@@ -1,14 +1,11 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/QfAIDTGi)
-# PROJECT NAME HERE (CHANGE THIS!!!!!)
+# REAL tournament
  
-### GROUP NAME HERE (CHANGE THIS!!!!!)
-
-Group Members Here (CHANGE THIS!!!!!)
+### 10f-titievskyl
+Leo Titievsky
        
 ### Project Description:
-
-Explain what is this project. (CHANGE THIS!!!!!)
-  
+3d FPS Game tournemant, with bots.  
 ### Instructions:
 
 How does the user install/compile/run the program. (CHANGE THIS!!!!!)
