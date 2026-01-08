@@ -1,5 +1,14 @@
 #include "networking.h"
+/*
+ *  process 
+ *  Who needs JSON?
+ *  parse player data string 'packets' into relevant numbers: ID, state, HP, x/y
+ *  maybe orientation in the future ... 
+ */
 
+void process(char * buff){
+	return 0;
+}
 void subserver_logic(int client_socket){
 	char inbuf[BUFFER_SIZE];
 	int gamebuff[8][8] = {0};
