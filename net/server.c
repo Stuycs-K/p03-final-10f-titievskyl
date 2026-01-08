@@ -6,9 +6,24 @@
  *  maybe orientation in the future ... 
  */
 
-void process(char * buff){
-	return 0;
+struct PlayerState {
+	int  ID; //ids are unique (will handshake integrate). going to use these as index hash for o(1) state sorting in a list of players
+		 //"moves" will be processed by ID order, if PID%1024, should be pretty random/fair
+	int  State;
+	int  HP;
+	float  x;
+	float  y;
+	//struct PlayerState * previous --- if i need to trace i'll make this a linked list
 }
+struct PlayerState * PLAYERS[1024];
+void process(char * buff, PlayerState * p){
+	fgets(buff, "%d %d %d %lf %lf", &(p->ID),&(p->State),&(p->HP),&(p->x),&(p->y),)
+	players[p->ID] = p;
+}
+
+
+//FOR THIS TO WORK SERVER NEEDS TO NUDGE IDS IF OVERLAPPED
+
 void subserver_logic(int client_socket){
 	char inbuf[BUFFER_SIZE];
 	int gamebuff[8][8] = {0};
