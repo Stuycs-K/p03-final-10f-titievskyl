@@ -1,4 +1,4 @@
-#include <SDL3/SDL.h>
+#include <SDL2/SDL.h>
 
 void drawColumn(SDL_Renderer *r, float x, float y1, float y2) {
     SDL_RenderLine(r, x, y1, x, y2);
