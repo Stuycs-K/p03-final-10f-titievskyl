@@ -18,7 +18,8 @@ How you will be using the topics covered in class in the project.
      
 How you are breaking down the project and who is responsible for which parts.
 The client side will use *memory allocation* and *signals* to handle IO, quitting, and graphics. It will also *network through sockets to a server*. The server will exec and fork subservers, and generate bot processes, linked through *Interprocess communication* 
-    
+The clients send position data to the server which uses a *non-blocking select* to check for positional updates each tick. The server then updates a ledger of a predetermined gameboard and shares the positions of each other player to each client, which can then update their drawing process.     
+
 # Intended pacing:
 FPS Core already completed
 1/8/26: seperate and revamp core FPS code, preparing game logic for feeding from a server process and graphics for using SDL or a frame buffer lib
