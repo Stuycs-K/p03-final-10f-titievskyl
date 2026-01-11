@@ -70,6 +70,12 @@ int main(int argc, char *argv[]) {
 						printf("Player %d: ID=%d State=%d HP=%d x=%.2f y=%.2f\n", 
 								i, PLAYERS[i].ID, PLAYERS[i].State, 
 								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y);
+						for (int j = 0; j < 2; j++) {
+							if (j != i && client_sockets[j] != -1) {
+								n = send(client_sockets[j], inbuf, n, 0);
+								
+							}
+						}
 					}
 				}
 			}

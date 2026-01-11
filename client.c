@@ -169,6 +169,30 @@ void main_loop()
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
 		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
+		char recvbuf[BUFFER_SIZE];
+		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
+		if (n > 0) {
+			int other_id, other_state, other_hp;
+			float other_x, other_y;
+			sscanf(recvbuf, "%d %d %d %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y);
+
+			// Draw other player as red column
+			float dx = other_x - p.x;
+			float dy = other_y - p.y;
+			float angle = atan2f(dy, dx) - p.state;
+			angle = fmodf(angle + M_PI, 2 * M_PI) - M_PI;
+
+			if (fabsf(angle) < HALF_FOV) {
+				float dist = sqrtf(dx*dx + dy*dy);
+				float col_height = (SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f);
+				int low = SCREEN_HEIGHT/2 - (int)col_height;
+				int high = SCREEN_HEIGHT/2 + (int)col_height;
+				int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
+
+				SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+				SDL_RenderDrawLine(renderer, x, low, x, high);
+			}
+		}
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
