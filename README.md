@@ -8,9 +8,16 @@ Leo Titievsky
 3d FPS Game tournemant, with bots.  
 ### Instructions:
 
-How does the user install/compile/run the program. (CHANGE THIS!!!!!)
-How does the user interact with this program? (CHANGE THIS!!!!!)
 
+"make server" to compile the server. Port can be adjusted (for MVP version, to be changed in the future) in net/networking.h.     
+"./server" to start a two player server      
+  
+Two clients can then each "make prog" and  "./prog" to initiate the client process, creating a graphical window in the process.      
+Control movement with W/S going foward and back, and A/D yawing to the left and right.           
+
+
+No shooting or winning yet (although you can die if you're creative with it), have fun running in circles with friends!      
 ### Resources/ References:
 
-list here(CHANGE THIS!!!!!)
+(https://wiki.libsdl.org/SDL2/FrontPage)         
+Enemy.bmp is an image of the Fortnite default    
