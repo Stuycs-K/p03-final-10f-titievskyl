@@ -164,14 +164,17 @@ void main_loop()
 				SDL_Delay(16);
 			}
 		}
-        char recvbuf[BUFFER_SIZE];
+		char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
 		if (n > 0) {
 			int other_id, other_state, other_hp;
 			float other_x, other_y;
 			sscanf(recvbuf, "%d %d %d %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y);
+			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
+			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
+			SDL_FreeSurface(sprite_surface);
 
-			// Draw other player as red column
+
 			float dx = other_x - p.x;
 			float dy = other_y - p.y;
 			float angle = atan2f(dy, dx) - p.state;
@@ -179,20 +182,25 @@ void main_loop()
 
 			if (fabsf(angle) < HALF_FOV) {
 				float dist = sqrtf(dx*dx + dy*dy);
-				float col_height = (SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f);
-				int low = SCREEN_HEIGHT/2 - (int)col_height;
-				int high = SCREEN_HEIGHT/2 + (int)col_height;
+				int sprite_height = (int)((SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f));
+				int sprite_width = sprite_height;
 				int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
+				SDL_Rect dest = {
+					x - sprite_width/2,
+					SCREEN_HEIGHT/2 - sprite_height,
+					sprite_width,
+					sprite_height * 2
+				};
 
-				SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-				SDL_RenderDrawLine(renderer, x, low, x, high);
+				SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
+
 			}
 		}
 		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
 		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
-		
+
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
