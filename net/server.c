@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 						for (int j = 0; j < 2; j++) {
 							if (j != i && client_sockets[j] != -1) {
 								n = send(client_sockets[j], inbuf, n, 0);
-								
+								printf("sent to player %d: %d bytes\n", i, n);
 							}
 						}
 					}
