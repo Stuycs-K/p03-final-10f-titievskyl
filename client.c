@@ -6,20 +6,49 @@
 #include <SDL2/SDL.h>
 #include "util/ray.h"
 #include "util/main.h"
-
+#include <signal.h>
+#include "net/networking.h"
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+int player_id;
 int hp = 100;
 long long last;
-int shooting = 0;
+int state = 0;
 float x_max = 3.5f;
-
+char* IP = "127.0.0.1";
 int edit_world[64][64] = {0};
 int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH];
 int score = 0;
 long long last_enemy;
 #define pellets 128
+
+
+//NET
+
+int server_socket = -1;
+
+void cleanup(int signo) {
+    if (server_socket != -1) {
+        close(server_socket);
+    }
+    exit(0);
+}
+
+void send_player_state(int server_socket, int id, int state, int hp, float x, float y) {
+    char buff[BUFFER_SIZE];
+    snprintf(buff, BUFFER_SIZE, "%d %d %d %.2f %.2f", id, state, hp, x, y);
+    send(server_socket, buff, BUFFER_SIZE, 0);
+}
+
+void net_setup(){
+    server_socket = client_tcp_handshake(IP);
+    printf("Connected to server\n");
+
+}
+//NET
+
+
 
 void handle_input(struct player *p, float move_speed, float turn_speed, long long millis, const Uint8 *keystate, int *running) {
 	if (keystate[SDL_SCANCODE_W]) {
@@ -42,7 +71,7 @@ void handle_input(struct player *p, float move_speed, float turn_speed, long lon
 	}
 	if (keystate[SDL_SCANCODE_SPACE]) {
 		if(millis - last > 500){
-			shooting = 1;
+			state = 1;
 			last = millis;
 			struct hit * bullet = cast_rays(p->state, p->x, p->y, test_arr, pellets, HALF_FOV);
 			for(int i = 0; i < pellets; i++){
@@ -134,6 +163,7 @@ void main_loop()
 		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
+        send_player_state(server_socket, player_id, p.state, hp, p.x, p.y);
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
@@ -142,7 +172,13 @@ void main_loop()
 	SDL_Quit();
 }
 
-int main(){
+int main(int argc, char * argv[]){
+    signal(SIGINT, cleanup);
+    char* IP = "127.0.0.1";
+    if(argc > 1) {
+        IP = argv[1];
+    }
+    player_id = getpid();
 	main_loop();
 	return 0;
 }
