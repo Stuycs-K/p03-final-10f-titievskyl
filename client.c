@@ -60,7 +60,7 @@ void handle_input(struct player *p, float move_speed, float turn_speed, long lon
 	p->state = fmodf(p->state, 2 * M_PI);
 }
 
-void test_world_and_rays()
+void main_loop()
 {
 	int s_x = 64;
 	int s_y = 64;
@@ -143,6 +143,6 @@ void test_world_and_rays()
 }
 
 int main(){
-	test_world_and_rays();
+	main_loop();
 	return 0;
 }

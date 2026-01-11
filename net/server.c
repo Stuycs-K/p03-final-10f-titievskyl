@@ -14,49 +14,53 @@ struct PlayerState {
 	float  x;
 	float  y;
 	//struct PlayerState * previous --- if i need to trace i'll make this a linked list
-}
-struct PlayerState * PLAYERS[1024];
-void process(char * buff, PlayerState * p){
-	fgets(buff, "%d %d %d %lf %lf", &(p->ID),&(p->State),&(p->HP),&(p->x),&(p->y),)
-	players[p->ID] = p;
-}
+};
+struct PlayerState PLAYERS[2];
+int player_count = 0;
 
-
-//FOR THIS TO WORK SERVER NEEDS TO NUDGE IDS IF OVERLAPPED
-
-void subserver_logic(int client_socket){
-	char inbuf[BUFFER_SIZE];
-	int gamebuff[8][8] = {0};
-	while (1) {
-		memset(inbuf, 0, sizeof(inbuf));
-		printf("Awaiting data...\n");
-		int n = recv(client_socket, inbuf, BUFFER_SIZE, MSG_WAITALL);
-		if (n <= 0){ 
-			printf("Subserver killed!\n");
-			break;
-		}
-		printf("Recieved! processing... \n");
-		rotX(inbuf, 13);
-		send(client_socket, inbuf, BUFFER_SIZE, 0);
-		printf("Sent!\n");
-	}
-
-	close(client_socket);
+void process(char *buff, struct PlayerState *p) {
+    sscanf(buff, "%d %d %d %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y));
 }
 
-int main(int argc, char *argv[] ) { 
-	int listen_socket = server_setup();
-	printf("setup complete || listen_socket: %d \n", listen_socket);
+void subserver_logic(int client_socket, int player_id) {
+    char inbuf[BUFFER_SIZE];
+    
+    while (1) {
+        memset(inbuf, 0, sizeof(inbuf));
+        int n = recv(client_socket, inbuf, BUFFER_SIZE, MSG_WAITALL);
+        if (n <= 0) {
+            printf("Player %d disconnected\n", player_id);
+            break;
+        }
+        
+        process(inbuf, &PLAYERS[player_id]);
+        printf("Player %d: State=%d HP=%d x=%.2f y=%.2f\n", 
+               PLAYERS[player_id].ID, PLAYERS[player_id].State, 
+               PLAYERS[player_id].HP, PLAYERS[player_id].x, PLAYERS[player_id].y);
+    }
+    
+    close(client_socket);
+}
 
-	while (1) {
-		int client_socket = server_tcp_handshake(listen_socket);
+int main(int argc, char *argv[]) { 
+    int listen_socket = server_setup();
+    printf("Server ready for 2 players\n");
 
-		if (fork() == 0) {
-			close(listen_socket);
-			subserver_logic(client_socket);
-			exit(0);
-		}
-
-		close(client_socket);
-	}
+    while (player_count < 2) {
+        int client_socket = server_tcp_handshake(listen_socket);
+        
+        if (fork() == 0) {
+            close(listen_socket);
+            subserver_logic(client_socket, player_count);
+            exit(0);
+        }
+        
+        printf("Player %d connected\n", player_count);
+        player_count++;
+        close(client_socket);
+    }
+    
+    wait(NULL);
+    wait(NULL);
+    close(listen_socket);
 }
