@@ -164,12 +164,7 @@ void main_loop()
 				SDL_Delay(16);
 			}
 		}
-
-		SDL_RenderPresent(renderer);
-		free(scan);
-		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
-		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
-		char recvbuf[BUFFER_SIZE];
+        char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
 		if (n > 0) {
 			int other_id, other_state, other_hp;
@@ -193,6 +188,11 @@ void main_loop()
 				SDL_RenderDrawLine(renderer, x, low, x, high);
 			}
 		}
+		SDL_RenderPresent(renderer);
+		free(scan);
+		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
+		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
+		
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
