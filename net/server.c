@@ -1,66 +1,84 @@
 #include "networking.h"
-/*
- *  process 
- *  Who needs JSON?
- *  parse player data string 'packets' into relevant numbers: ID, state, HP, x/y
- *  maybe orientation in the future ... 
- */
+#include <string.h>
 
 struct PlayerState {
-	int  ID; //ids are unique (will handshake integrate). going to use these as index hash for o(1) state sorting in a list of players
-		 //"moves" will be processed by ID order, if PID%1024, should be pretty random/fair
+	int  ID;
 	int  State;
 	int  HP;
 	float  x;
 	float  y;
-	//struct PlayerState * previous --- if i need to trace i'll make this a linked list
 };
+
 struct PlayerState PLAYERS[2];
-int player_count = 0;
+int client_sockets[2] = {-1, -1};
 
 void process(char *buff, struct PlayerState *p) {
-    sscanf(buff, "%d %d %d %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y));
-}
-
-void subserver_logic(int client_socket, int player_id) {
-    char inbuf[BUFFER_SIZE];
-    
-    while (1) {
-        memset(inbuf, 0, sizeof(inbuf));
-        int n = recv(client_socket, inbuf, BUFFER_SIZE, MSG_WAITALL);
-        if (n <= 0) {
-            printf("Player %d disconnected\n", player_id);
-            break;
-        }
-        
-        process(inbuf, &PLAYERS[player_id]);
-        printf("Player %d: State=%d HP=%d x=%.2f y=%.2f\n", 
-               PLAYERS[player_id].ID, PLAYERS[player_id].State, 
-               PLAYERS[player_id].HP, PLAYERS[player_id].x, PLAYERS[player_id].y);
-    }
-    
-    close(client_socket);
+	int parsed = sscanf(buff, "%d %d %d %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y));
+	printf("Parsed %d fields from: %s\n", parsed, buff);
 }
 
 int main(int argc, char *argv[]) { 
-    int listen_socket = server_setup();
-    printf("Server ready for 2 players\n");
+	int listen_socket = server_setup();
+	printf("Listen socket: %d\n", listen_socket);
+	printf("Waiting for 2 players...\n");
 
-    while (player_count < 2) {
-        int client_socket = server_tcp_handshake(listen_socket);
-        
-        if (fork() == 0) {
-            close(listen_socket);
-            subserver_logic(client_socket, player_count);
-            exit(0);
-        }
-        
-        printf("Player %d connected\n", player_count);
-        player_count++;
-        close(client_socket);
-    }
-    
-    wait(NULL);
-    wait(NULL);
-    close(listen_socket);
+	for (int i = 0; i < 2; i++) {
+		printf("Waiting for player %d...\n", i);
+		client_sockets[i] = server_tcp_handshake(listen_socket);
+		printf("Player %d connected on socket %d\n", i, client_sockets[i]);
+	}
+
+	printf("Both players connected");
+
+	fd_set read_fds;
+	char inbuf[BUFFER_SIZE];
+
+	while (1) {
+		FD_ZERO(&read_fds);
+		int max_fd = -1;
+
+		for (int i = 0; i < 2; i++) {
+			if (client_sockets[i] != -1) {
+				FD_SET(client_sockets[i], &read_fds);
+				if (client_sockets[i] > max_fd) {
+					max_fd = client_sockets[i];
+				}
+			}
+		}
+
+		struct timeval timeout = {1, 0};
+		int activity = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
+
+		if (activity < 0) {
+			printf("Select error\n");
+			break;
+		}
+
+		if (activity > 0) {
+			for (int i = 0; i < 2; i++) {
+				if (client_sockets[i] != -1 && FD_ISSET(client_sockets[i], &read_fds)) {
+					memset(inbuf, 0, sizeof(inbuf));
+					int n = recv(client_sockets[i], inbuf, BUFFER_SIZE - 1, 0);
+					printf("Recv from player %d: %d bytes\n", i, n);
+					if (n <= 0) {
+						printf("Player %d disconnected\n", i);
+						close(client_sockets[i]);
+						client_sockets[i] = -1;
+					} else {
+						inbuf[n] = '\0';
+						process(inbuf, &PLAYERS[i]);
+						printf("Player %d: ID=%d State=%d HP=%d x=%.2f y=%.2f\n", 
+								i, PLAYERS[i].ID, PLAYERS[i].State, 
+								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y);
+					}
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < 2; i++) {
+		if (client_sockets[i] != -1) close(client_sockets[i]);
+	}
+	close(listen_socket);
+	return 0;
 }

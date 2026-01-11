@@ -29,22 +29,27 @@ long long last_enemy;
 int server_socket = -1;
 
 void cleanup(int signo) {
-    if (server_socket != -1) {
-        close(server_socket);
-    }
-    exit(0);
+	if (server_socket != -1) {
+		close(server_socket);
+	}
+	exit(0);
 }
 
-void send_player_state(int server_socket, int id, int state, int hp, float x, float y) {
-    char buff[BUFFER_SIZE];
-    snprintf(buff, BUFFER_SIZE, "%d %d %d %.2f %.2f", id, state, hp, x, y);
-    send(server_socket, buff, BUFFER_SIZE, 0);
+void send_player_state(int server_socket, int id, int shooting, int hp, float x, float y) {
+	char buff[BUFFER_SIZE];
+	snprintf(buff, BUFFER_SIZE, "%d %d %d %.2f %.2f", id, shooting, hp, x, y);
+	int sent = send(server_socket, buff, strlen(buff), 0);
+	printf("Sent %d bytes: %s\n", sent, buff);
 }
 
 void net_setup(){
-    server_socket = client_tcp_handshake(IP);
-    printf("Connected to server\n");
-
+	printf("Attempting to connect to %s...\n", IP);
+	server_socket = client_tcp_handshake(IP);
+	if (server_socket < 0) {
+		printf("Failed to connect\n");
+		exit(1);
+	}
+	printf("Connected to server on socket %d\n", server_socket);
 }
 //NET
 
@@ -163,7 +168,7 @@ void main_loop()
 		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
-        send_player_state(server_socket, player_id, p.state, hp, p.x, p.y);
+		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
@@ -173,12 +178,12 @@ void main_loop()
 }
 
 int main(int argc, char * argv[]){
-    signal(SIGINT, cleanup);
-    char* IP = "127.0.0.1";
-    if(argc > 1) {
-        IP = argv[1];
-    }
-    player_id = getpid();
+	signal(SIGINT, cleanup);
+	if(argc > 1) {
+		IP = argv[1];
+	}
+	net_setup();
+	player_id = getpid();
 	main_loop();
 	return 0;
 }
