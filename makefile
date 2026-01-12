@@ -1,6 +1,6 @@
 
 CC = gcc
-CFLAGS = -Wall -g `sdl2-config --cflags --libs`
+CFLAGS = -Wall -g -I/usr/include/SDL2
 TARGET = prog
 SOURCES = client.c util/ray.c util/main.h net/networking.h net/networking.c
 

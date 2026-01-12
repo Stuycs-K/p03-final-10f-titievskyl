@@ -8,7 +8,7 @@
 #include "util/main.h"
 #include <signal.h>
 #include "net/networking.h"
-#define SCREEN_WIDTH 640
+#define SCREEN_WIDTH 620
 #define SCREEN_HEIGHT 480
 
 int player_id;
@@ -127,7 +127,7 @@ void main_loop()
 
 		const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
-		int num_rays = 128;
+		int num_rays = 512;
 		struct hit * scan;
 		scan = p_cast_rays(&p, test_arr, num_rays);
 
