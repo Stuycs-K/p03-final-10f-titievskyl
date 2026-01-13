@@ -16,9 +16,18 @@ int hp = 100;
 long long last;
 int state = 0;
 float x_max = 3.5f;
+
+
+
+
 char* IP = "127.0.0.1";
+
+
+
 int edit_world[64][64] = {0};
 int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH];
+
+
 int score = 0;
 long long last_enemy;
 #define pellets 128
@@ -98,6 +107,7 @@ void main_loop()
 {
 	int s_x = 64;
 	int s_y = 64;
+	//does this need to be redef'd? trace....
 	struct timespec ts;
 
 	for (int x = 0; x < s_x; x++) {
@@ -175,8 +185,16 @@ void main_loop()
 			int other_id, other_state, other_hp;
 			float other_x, other_y;
 			sscanf(recvbuf, "%d %d %d %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y);
-			
-			
+			for(int i = 0; i<64; i++){
+				for(int j = 0; j < 64; j++){
+					if(test_arr[i][j] == 'E'){
+						test_arr[i][j] = '0'; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
+						break;
+					}
+				}
+			}			
+			//round position for shooting later
+			test_arr[(int)other_x][(int)other_y] = 'E';
 			//texture setup
 			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
 			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
