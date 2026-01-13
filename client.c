@@ -149,7 +149,7 @@ void main_loop()
 				SDL_RenderDrawLine(renderer, x, low, x, high);
 			}
 		}
-
+		//death
 		if (hp <= 0) {
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 			SDL_RenderClear(renderer);
@@ -164,17 +164,25 @@ void main_loop()
 				SDL_Delay(16);
 			}
 		}
+
+
+
+		//enemy pos.
 		char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
 		if (n > 0) {
+			//parse
 			int other_id, other_state, other_hp;
 			float other_x, other_y;
 			sscanf(recvbuf, "%d %d %d %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y);
+			
+			
+			//texture setup
 			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
 			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
 			SDL_FreeSurface(sprite_surface);
 
-
+			//scaling and pos
 			float dx = other_x - p.x;
 			float dy = other_y - p.y;
 			float angle = atan2f(dy, dx) - p.state;
@@ -185,6 +193,7 @@ void main_loop()
 				int sprite_height = (int)((SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f));
 				int sprite_width = sprite_height;
 				int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
+				
 				SDL_Rect dest = {
 					x - sprite_width/2,
 					SCREEN_HEIGHT/2 - sprite_height,
@@ -193,9 +202,19 @@ void main_loop()
 				};
 
 				SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
-
+			
 			}
 		}
+		SDL_Surface *gun_surface = SDL_LoadBMP("gun.bmp");
+		SDL_Texture *gun_texture = SDL_CreateTextureFromSurface(renderer, gun_surface);
+		SDL_FreeSurface(gun_surface);
+		SDL_Rect destG = {
+			(int) .66f * SCREEN_HEIGHT,
+			(int) .66f * SCREEN_WIDTH,
+			100,
+			100
+		};
+		SDL_RenderCopy(renderer, gun_texture, NULL, &destG);
 		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
