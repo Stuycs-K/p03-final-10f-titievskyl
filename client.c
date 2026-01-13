@@ -209,8 +209,8 @@ void main_loop()
 		SDL_Texture *gun_texture = SDL_CreateTextureFromSurface(renderer, gun_surface);
 		SDL_FreeSurface(gun_surface);
 		SDL_Rect destG = {
-			(int) .66f * SCREEN_HEIGHT,
-			(int) .66f * SCREEN_WIDTH,
+			SCREEN_WIDTH-100,
+			SCREEN_HEIGHT-100,
 			100,
 			100
 		};
