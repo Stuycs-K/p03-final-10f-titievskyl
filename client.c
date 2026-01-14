@@ -44,9 +44,9 @@ void cleanup(int signo) {
 	exit(0);
 }
 
-void send_player_state(int server_socket, int id, int shooting, int hp, float x, float y) {
+void send_player_state(int server_socket, int id, int shooting, int hp, float x, float y, float rot) {
 	char buff[BUFFER_SIZE];
-	snprintf(buff, BUFFER_SIZE, "%d %d %d %.2f %.2f", id, shooting, hp, x, y);
+	snprintf(buff, BUFFER_SIZE, "%d %d %d %f %f %f", id, shooting, hp, x, y, rot);
 	int sent = send(server_socket, buff, strlen(buff), 0);
 	printf("Sent %d bytes: %s\n", sent, buff);
 }
@@ -90,9 +90,10 @@ void handle_input(struct player *p, float move_speed, float turn_speed, long lon
 			struct hit * bullet = cast_rays(p->state, p->x, p->y, test_arr, pellets, HALF_FOV);
 			for(int i = 0; i < pellets; i++){
 				if(bullet[i].value == 'E'){
-					test_arr[bullet[i].map_y][bullet[i].map_x] = '@';
+					//test_arr[bullet[i].map_y][bullet[i].map_x] = '@'; //corpses
 					score += 10;
 					last_enemy = 0;
+					state = 3;
 				}
 			}
 		}
@@ -183,8 +184,9 @@ void main_loop()
 		if (n > 0) {
 			//parse
 			int other_id, other_state, other_hp;
+			float other_rot;
 			float other_x, other_y;
-			sscanf(recvbuf, "%d %d %d %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y);
+			sscanf(recvbuf, "%d %d %d %.2f %.2f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
 			for(int i = 0; i<64; i++){
 				for(int j = 0; j < 64; j++){
 					if(test_arr[i][j] == 'E'){
@@ -236,7 +238,7 @@ void main_loop()
 		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
-		send_player_state(server_socket, player_id,state, hp, p.x, p.y);
+		send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
 
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
