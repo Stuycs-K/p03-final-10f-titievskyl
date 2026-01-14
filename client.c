@@ -187,7 +187,7 @@ void main_loop()
 			int other_id, other_state, other_hp;
 			float other_rot;
 			float other_x, other_y;
-			sscanf(recvbuf, "%d %d %d %.2f %.2f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
+			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
 			for(int i = 0; i<64; i++){
 				for(int j = 0; j < 64; j++){
 					if(test_arr[i][j] == 'E'){
