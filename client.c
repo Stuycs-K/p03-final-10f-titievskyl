@@ -191,13 +191,13 @@ void main_loop()
 			for(int i = 0; i<64; i++){
 				for(int j = 0; j < 64; j++){
 					if(test_arr[i][j] == 'E'){
-						test_arr[i][j] = '0'; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
+						test_arr[i][j] = 0; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
 						break;
 					}
 				}
 			}			
 			//round position for shooting later
-			test_arr[(int)other_x][(int)other_y] = 'E';
+			test_arr[(int)other_y][(int)other_x] = 'E';
 			//texture setup
 			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
 			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
