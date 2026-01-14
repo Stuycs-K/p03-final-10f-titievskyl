@@ -65,6 +65,7 @@ void net_setup(){
 
 
 void handle_input(struct player *p, float move_speed, float turn_speed, long long millis, const Uint8 *keystate, int *running) {
+	state = 0;
 	if (keystate[SDL_SCANCODE_W]) {
 		if(!test_arr[(int)(p->x + cosf(p->state) * move_speed)][(int)(p->y + sinf(p->state) * move_speed)]){
 			p->x += cosf(p->state) * move_speed;
