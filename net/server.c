@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 								i, PLAYERS[i].ID, PLAYERS[i].State, 
 								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y, PLAYERS[i].rot);
 						if(PLAYERS[i].State == 3){
-							close(client_sockets[i]);
+							PLAYERS[i+1%2].x = 1000000; //to narnia..
 						}
 						for (int j = 0; j < 2; j++) {
 							if (j != i && client_sockets[j] != -1) {
