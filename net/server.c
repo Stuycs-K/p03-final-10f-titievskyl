@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 								i, PLAYERS[i].ID, PLAYERS[i].State, 
 								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y, PLAYERS[i].rot);
 						if(PLAYERS[i].State == 3){
-							PLAYERS[i+1%2].x = 1000000; //to narnia..
+						//	PLAYERS[i+1%2].x = 1000000; //to narnia..
 						}
 						for (int j = 0; j < 2; j++) {
 							if (j != i && client_sockets[j] != -1) {
@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+		usleep((int)(1/60.0f * 100000));
 	}
 
 	for (int i = 0; i < 2; i++) {

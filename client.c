@@ -195,6 +195,9 @@ void main_loop()
 						break;
 					}
 				}
+			}
+			if(other_state == 3){
+				hp -= 50;
 			}			
 			//round position for shooting later
 			test_arr[(int)other_y][(int)other_x] = 'E';
