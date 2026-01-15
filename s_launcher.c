@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+struct Player {
+    int socket;
+    char name[32];
+    int ready;
+};
 
 int main() {
     char mode[10];

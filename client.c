@@ -292,6 +292,11 @@ int main(int argc, char * argv[]){
 		IP = argv[1];
 	}
 	net_setup();
+	char name[32];
+printf("Enter name: ");
+fgets(name, 32, stdin);
+name[strcspn(name, "\n")] = 0;
+send(server_socket, name, strlen(name), 0);
 	TTF_Init();
 		player_id = getpid();
 	main_loop();
