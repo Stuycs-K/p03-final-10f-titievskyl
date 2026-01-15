@@ -18,7 +18,7 @@ int hp = 100;
 long long last;
 int state = 0;
 float x_max = 3.5f;
-
+int killed = 0;
 
 
 
@@ -140,7 +140,7 @@ void main_loop()
 		while(SDL_PollEvent(&e)){
 			if(e.type == SDL_QUIT) running = 0;
 		}
-
+	
 		const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
 		int num_rays = 512;
@@ -159,7 +159,15 @@ void main_loop()
 			if (high >= SCREEN_HEIGHT) high = SCREEN_HEIGHT - 1;
 			if (x >= 0 && x < SCREEN_WIDTH && low <= high) {
 				if (scan[i].value == 2) SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-				else if (scan[i].value == 'E') SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+				else if (scan[i].value == 'E'&&!killed){ //check if dead 
+					if(state ==3){
+						SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+						SDL_RenderClear(renderer);
+						SDL_RenderPresent(renderer);
+				}else{
+						SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+					}
+				}
 				else SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
 
 				SDL_RenderDrawLine(renderer, x, low, x, high);
@@ -183,7 +191,7 @@ void main_loop()
 		int other_id, other_state, other_hp;
                         float other_rot;
                         float other_x, other_y;
-			other_x = 0;
+			other_x = 0; // dep from teleporter death method
 		if (n > 0 && other_x < 64) {
 			//parse
 			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
@@ -194,6 +202,9 @@ void main_loop()
 						break;
 					}
 				}
+			}
+			if(other_hp==0){
+				killed = 1;
 			}
 			if(other_state == 3){
 				hp -= 50;
@@ -248,20 +259,25 @@ void main_loop()
 		
 		
 		
-		TTF_Font * sans = TTF_OpenFont("Sans.ttf", 24);
+		TTF_Font * sans = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
 		SDL_Color White = {255,255,255};
 		char message[100] = {0};
 		snprintf(message, 100, "Hp: %d", hp);
 		SDL_Surface * surfaceMessage = TTF_RenderText_Solid(sans, message, White);
-		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);		      SDL_Rect destT = {
+		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);		      
+		SDL_Rect destT = {
 			100,
 			100,
-			1000,
-			1000
+			100, 
+    		30 
 		};
 		SDL_RenderCopy(renderer, Message, NULL, &destT);
 		send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
 		SDL_RenderPresent(renderer);	
+		SDL_DestroyTexture(Message);
+		SDL_FreeSurface(surfaceMessage);
+		TTF_CloseFont(sans);
+
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
