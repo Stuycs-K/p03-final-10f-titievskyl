@@ -66,6 +66,10 @@ int main(int argc, char *argv[]) {
 	} else if (num_players == 4) {
     int winners[2];
     
+    char msg1[] = "Match 1 starting...\n";
+    send(players[0].socket, msg1, strlen(msg1), 0);
+    send(players[1].socket, msg1, strlen(msg1), 0);
+    
     if (fork() == 0) {
         close(listen_socket);
         dup2(players[0].socket, 3);
@@ -77,6 +81,14 @@ int main(int argc, char *argv[]) {
     wait(&status);
     winners[0] = WEXITSTATUS(status);
     
+    char advance[64];
+    snprintf(advance, 64, "You advance to finals!\n");
+    send(players[winners[0]].socket, advance, strlen(advance), 0);
+    
+    char msg2[] = "Match 2 starting...\n";
+    send(players[2].socket, msg2, strlen(msg2), 0);
+    send(players[3].socket, msg2, strlen(msg2), 0);
+    
     if (fork() == 0) {
         close(listen_socket);
         dup2(players[2].socket, 3);
@@ -87,7 +99,14 @@ int main(int argc, char *argv[]) {
     wait(&status);
     winners[1] = 2 + WEXITSTATUS(status);
     
+    snprintf(advance, 64, "You advance to finals!\n");
+    send(players[winners[1]].socket, advance, strlen(advance), 0);
+    
     sleep(3);
+    
+    char finals[] = "Finals starting...\n";
+    send(players[winners[0]].socket, finals, strlen(finals), 0);
+    send(players[winners[1]].socket, finals, strlen(finals), 0);
     
     if (fork() == 0) {
         close(listen_socket);

@@ -54,30 +54,30 @@ void send_player_state(int server_socket, int id, int shooting, int hp, float x,
 }
 
 void net_setup(int passed_socket){
-    if (passed_socket >= 0) {
-        server_socket = passed_socket;
-    } else {
-        server_socket = client_tcp_handshake(IP);
-    }
+	if (passed_socket >= 0) {
+		server_socket = passed_socket;
+	} else {
+		server_socket = client_tcp_handshake(IP);
+	}
 }
 //NET
 void wait_for_game_start() {
-    char name[32];
-    printf("Enter name: ");
-    fgets(name, 32, stdin);
-    name[strcspn(name, "\n")] = 0;
-    send(server_socket, name, strlen(name), 0);
-    
-    char buf[256];
-    while (1) {
-        int n = recv(server_socket, buf, 255, 0);
-        if (n > 0) {
-            buf[n] = 0;
-            printf("%s", buf);
-            fflush(stdout);
-            if (strstr(buf, "START")) break;
-        }
-    }
+	char name[32];
+	printf("Enter name: ");
+	fgets(name, 32, stdin);
+	name[strcspn(name, "\n")] = 0;
+	send(server_socket, name, strlen(name), 0);
+
+	char buf[256];
+	while (1) {
+		int n = recv(server_socket, buf, 255, 0);
+		if (n > 0) {
+			buf[n] = 0;
+			printf("%s", buf);
+			fflush(stdout);
+			if (strstr(buf, "START")) break;
+		}
+	}
 }
 
 
@@ -155,7 +155,7 @@ void main_loop()
 		while(SDL_PollEvent(&e)){
 			if(e.type == SDL_QUIT) running = 0;
 		}
-	
+
 		const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
 		int num_rays = 512;
@@ -174,12 +174,12 @@ void main_loop()
 			if (high >= SCREEN_HEIGHT) high = SCREEN_HEIGHT - 1;
 			if (x >= 0 && x < SCREEN_WIDTH && low <= high) {
 				if (scan[i].value == 2) SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-				else if (scan[i].value == 'E'&&!killed){ //check if dead 
+				else if (scan[i].value == 'E'){ //check if dead 
 					if(state ==3){
 						SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 						SDL_RenderClear(renderer);
 						SDL_RenderPresent(renderer);
-				}else{
+					}else{
 						SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 					}
 				}
@@ -193,7 +193,6 @@ void main_loop()
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 			SDL_RenderClear(renderer);
 			SDL_RenderPresent(renderer);
-			p.x = 1000;
 			usleep(500000);
 			exit(0);
 		}
@@ -204,9 +203,9 @@ void main_loop()
 		char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
 		int other_id, other_state, other_hp;
-                        float other_rot;
-                        float other_x, other_y;
-			other_x = 0; // dep from teleporter death method
+		float other_rot;
+		float other_x, other_y;
+		other_x = 0; // dep from teleporter death method
 		if (n > 0 && other_x < 64) {
 			//parse
 			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
@@ -231,9 +230,9 @@ void main_loop()
 			}
 			//texture setup
 			/*
-			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
-			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
-			SDL_FreeSurface(sprite_surface);
+			   SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
+			   SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
+			   SDL_FreeSurface(sprite_surface);
 
 			//scaling and pos
 			float dx = other_x - p.x;
@@ -242,20 +241,20 @@ void main_loop()
 			angle = fmodf(angle + M_PI, 2 * M_PI) - M_PI;
 
 			if (fabsf(angle) < HALF_FOV) {
-				float dist = sqrtf(dx*dx + dy*dy);
-				int sprite_height = (int)((SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f));
-				int sprite_width = sprite_height;
-				int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
-				
-				SDL_Rect dest = {
-					x - sprite_width/2,
-					SCREEN_HEIGHT/2 - sprite_height,
-					sprite_width,
-					sprite_height * 2
-				};
+			float dist = sqrtf(dx*dx + dy*dy);
+			int sprite_height = (int)((SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f));
+			int sprite_width = sprite_height;
+			int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
 
-				SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
-			
+			SDL_Rect dest = {
+			x - sprite_width/2,
+			SCREEN_HEIGHT/2 - sprite_height,
+			sprite_width,
+			sprite_height * 2
+			};
+
+			SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
+
 			}
 			*/
 		}
@@ -271,10 +270,10 @@ void main_loop()
 		SDL_RenderCopy(renderer, gun_texture, NULL, &destG);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
-		
-		
-		
-		
+
+
+
+
 		TTF_Font * sans = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
 		SDL_Color White = {255,255,255};
 		char message[100] = {0};
@@ -285,7 +284,7 @@ void main_loop()
 			100,
 			100,
 			100, 
-    		30 
+			30 
 		};
 		SDL_RenderCopy(renderer, Message, NULL, &destT);
 		send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
@@ -304,15 +303,15 @@ void main_loop()
 }
 
 int main(int argc, char * argv[]){
-    signal(SIGINT, cleanup);
-    int passed_socket = -1;
-    if(argc > 1) {
-        passed_socket = atoi(argv[1]);
-    }
-    net_setup(passed_socket);
-    wait_for_game_start();
-    TTF_Init();
-    player_id = getpid();
-    main_loop();
-    return 0;
+	signal(SIGINT, cleanup);
+	int passed_socket = -1;
+	if(argc > 1) {
+		passed_socket = atoi(argv[1]);
+	}
+	net_setup(passed_socket);
+	wait_for_game_start();
+	TTF_Init();
+	player_id = getpid();
+	main_loop();
+	return 0;
 }
