@@ -53,17 +53,32 @@ void send_player_state(int server_socket, int id, int shooting, int hp, float x,
 	printf("Sent %d bytes: %s\n", sent, buff);
 }
 
-void net_setup(){
-	printf("Attempting to connect to %s...\n", IP);
-	server_socket = client_tcp_handshake(IP);
-	if (server_socket < 0) {
-		printf("Failed to connect\n");
-		exit(1);
-	}
-	printf("Connected to server on socket %d\n", server_socket);
+void net_setup(int passed_socket){
+    if (passed_socket >= 0) {
+        server_socket = passed_socket;
+    } else {
+        server_socket = client_tcp_handshake(IP);
+    }
 }
 //NET
-
+void wait_for_game_start() {
+    char name[32];
+    printf("Enter name: ");
+    fgets(name, 32, stdin);
+    name[strcspn(name, "\n")] = 0;
+    send(server_socket, name, strlen(name), 0);
+    
+    char buf[256];
+    while (1) {
+        int n = recv(server_socket, buf, 255, 0);
+        if (n > 0) {
+            buf[n] = 0;
+            printf("%s", buf);
+            fflush(stdout);
+            if (strstr(buf, "START")) break;
+        }
+    }
+}
 
 
 
@@ -287,32 +302,15 @@ void main_loop()
 }
 
 int main(int argc, char * argv[]){
-	signal(SIGINT, cleanup);
-	if(argc > 1) {
-		IP = argv[1];
-	}
-	net_setup();
-	char name[32];
-	printf("Enter name: ");
-	fgets(name, 32, stdin);
-	name[strcspn(name, "\n")] = 0;
-	send(server_socket, name, strlen(name), 0);
-	fd_set rfds;
-struct timeval tv = {0, 100000};
-char buf[256];
-while (1) {
-    FD_ZERO(&rfds);
-    FD_SET(server_socket, &rfds);
-    if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
-        int n = recv(server_socket, buf, 255, MSG_DONTWAIT);
-        if (n > 0) {
-            buf[n] = 0;
-            printf("%s", buf);
-            if (strstr(buf, "Starting in 1")) break;
-        }
+    signal(SIGINT, cleanup);
+    int passed_socket = -1;
+    if(argc > 1) {
+        passed_socket = atoi(argv[1]);
     }
-	TTF_Init();
-		player_id = getpid();
-	main_loop();
-	return 0;
+    net_setup(passed_socket);
+    wait_for_game_start();
+    TTF_Init();
+    player_id = getpid();
+    main_loop();
+    return 0;
 }
