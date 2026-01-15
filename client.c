@@ -211,7 +211,7 @@ void main_loop()
 			}			
 			//round position for shooting later
 			if(other_x < 64 && other_y < 64){
-			test_arr[(int)other_y][(int)other_x] = 'E';
+				test_arr[(int)other_y][(int)other_x] = 'E';
 			}
 			//texture setup
 			/*
