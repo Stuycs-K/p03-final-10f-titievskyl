@@ -73,9 +73,11 @@ void wait_for_game_start() {
 		int n = recv(server_socket, buf, 255, 0);
 		if (n > 0) {
 			buf[n] = 0;
+			if (strstr(buf, "START")) {
+				break;
+			}
 			printf("%s", buf);
 			fflush(stdout);
-			if (strstr(buf, "START")) break;
 		}
 	}
 }
@@ -138,8 +140,9 @@ void main_loop()
 	}
 
 	struct player p;
-	p.x = 32;
-	p.y = 32;
+	srand(getpid());
+	p.x = rand() % 64;
+	p.y = rand() % 64;
 	p.state = 0;
 
 	SDL_Init(SDL_INIT_VIDEO);
@@ -217,16 +220,24 @@ void main_loop()
 					}
 				}
 			}
-			if(other_hp==0){
+			if(other_hp <= 0){
 				killed = 1;
 				state = 5;
-			}
-			if(other_state == 3){
-				hp -= 50;
-			}			
-			//round position for shooting later
-			if(other_x < 64 && other_y < 64){
-				test_arr[(int)other_y][(int)other_x] = 'E';
+				for(int i = 0; i < 64; i++){
+					for(int j = 0; j < 64; j++){
+						if(test_arr[i][j] == 'E'){
+							test_arr[i][j] = 0;
+							break;
+						}
+					}
+				}
+			} else {
+				if(other_state == 3){
+					hp -= 50;
+				}			
+				if(other_x < 64 && other_y < 64){
+					test_arr[(int)other_y][(int)other_x] = 'E';
+				}
 			}
 			//texture setup
 			/*
