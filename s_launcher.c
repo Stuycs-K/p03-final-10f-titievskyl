@@ -63,7 +63,43 @@ int main(int argc, char *argv[]) {
 		close(players[1].socket);
 		close(listen_socket);
 		wait(NULL);
-	}
+	} else if (num_players == 4) {
+    int winners[2];
+    
+    if (fork() == 0) {
+        close(listen_socket);
+        dup2(players[0].socket, 3);
+        dup2(players[1].socket, 4);
+        execl("./server", "./server", "3", "4", NULL);
+        exit(1);
+    }
+    int status;
+    wait(&status);
+    winners[0] = WEXITSTATUS(status);
+    
+    if (fork() == 0) {
+        close(listen_socket);
+        dup2(players[2].socket, 3);
+        dup2(players[3].socket, 4);
+        execl("./server", "./server", "3", "4", NULL);
+        exit(1);
+    }
+    wait(&status);
+    winners[1] = 2 + WEXITSTATUS(status);
+    
+    sleep(3);
+    
+    if (fork() == 0) {
+        close(listen_socket);
+        dup2(players[winners[0]].socket, 3);
+        dup2(players[winners[1]].socket, 4);
+        execl("./server", "./server", "3", "4", NULL);
+        exit(1);
+    }
+    wait(NULL);
+    
+    close(listen_socket);
+}
 
 	return 0;
 }

@@ -220,6 +220,7 @@ void main_loop()
 			}
 			if(other_hp==0){
 				killed = 1;
+				state = 5;
 			}
 			if(other_state == 3){
 				hp -= 50;
@@ -298,6 +299,7 @@ void main_loop()
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
+
 	SDL_Quit();
 }
 
