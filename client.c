@@ -4,6 +4,8 @@
 #include <math.h>
 #include <time.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #include "util/ray.h"
 #include "util/main.h"
 #include <signal.h>
@@ -61,6 +63,8 @@ void net_setup(){
 	printf("Connected to server on socket %d\n", server_socket);
 }
 //NET
+
+
 
 
 
@@ -166,15 +170,9 @@ void main_loop()
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 			SDL_RenderClear(renderer);
 			SDL_RenderPresent(renderer);
-
-			while(running) {
-				while(SDL_PollEvent(&e)){
-					if(e.type == SDL_QUIT) running = 0;
-				}
-				const Uint8 *ks = SDL_GetKeyboardState(NULL);
-				if(ks[SDL_SCANCODE_Q]) running = 0;
-				SDL_Delay(16);
-			}
+			p.x = 1000;
+			usleep(500000);
+			exit(0);
 		}
 
 
@@ -182,11 +180,12 @@ void main_loop()
 		//enemy pos.
 		char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
-		if (n > 0) {
+		int other_id, other_state, other_hp;
+                        float other_rot;
+                        float other_x, other_y;
+			other_x = 0;
+		if (n > 0 && other_x < 64) {
 			//parse
-			int other_id, other_state, other_hp;
-			float other_rot;
-			float other_x, other_y;
 			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
 			for(int i = 0; i<64; i++){
 				for(int j = 0; j < 64; j++){
@@ -200,8 +199,11 @@ void main_loop()
 				hp -= 50;
 			}			
 			//round position for shooting later
+			if(other_x < 64 && other_y < 64){
 			test_arr[(int)other_y][(int)other_x] = 'E';
+			}
 			//texture setup
+			/*
 			SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
 			SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
 			SDL_FreeSurface(sprite_surface);
@@ -228,6 +230,7 @@ void main_loop()
 				SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
 			
 			}
+			*/
 		}
 		SDL_Surface *gun_surface = SDL_LoadBMP("gun.bmp");
 		SDL_Texture *gun_texture = SDL_CreateTextureFromSurface(renderer, gun_surface);
@@ -239,11 +242,26 @@ void main_loop()
 			100
 		};
 		SDL_RenderCopy(renderer, gun_texture, NULL, &destG);
-		SDL_RenderPresent(renderer);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
+		
+		
+		
+		
+		TTF_Font * sans = TTF_OpenFont("Sans.ttf", 24);
+		SDL_Color White = {255,255,255};
+		char message[100] = {0};
+		snprintf(message, 100, "Hp: %d", hp);
+		SDL_Surface * surfaceMessage = TTF_RenderText_Solid(sans, message, White);
+		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);		      SDL_Rect destT = {
+			100,
+			100,
+			1000,
+			1000
+		};
+		SDL_RenderCopy(renderer, Message, NULL, &destT);
 		send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
-
+		SDL_RenderPresent(renderer);	
 		SDL_Delay((int)(1000.0f/FRAMERATE));
 	}
 
@@ -258,7 +276,8 @@ int main(int argc, char * argv[]){
 		IP = argv[1];
 	}
 	net_setup();
-	player_id = getpid();
+	TTF_Init();
+		player_id = getpid();
 	main_loop();
 	return 0;
 }
