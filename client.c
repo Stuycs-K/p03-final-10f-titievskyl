@@ -293,10 +293,24 @@ int main(int argc, char * argv[]){
 	}
 	net_setup();
 	char name[32];
-printf("Enter name: ");
-fgets(name, 32, stdin);
-name[strcspn(name, "\n")] = 0;
-send(server_socket, name, strlen(name), 0);
+	printf("Enter name: ");
+	fgets(name, 32, stdin);
+	name[strcspn(name, "\n")] = 0;
+	send(server_socket, name, strlen(name), 0);
+	fd_set rfds;
+struct timeval tv = {0, 100000};
+char buf[256];
+while (1) {
+    FD_ZERO(&rfds);
+    FD_SET(server_socket, &rfds);
+    if (select(server_socket + 1, &rfds, NULL, NULL, &tv) > 0) {
+        int n = recv(server_socket, buf, 255, MSG_DONTWAIT);
+        if (n > 0) {
+            buf[n] = 0;
+            printf("%s", buf);
+            if (strstr(buf, "Starting in 1")) break;
+        }
+    }
 	TTF_Init();
 		player_id = getpid();
 	main_loop();
