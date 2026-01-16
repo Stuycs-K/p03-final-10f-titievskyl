@@ -1,6 +1,9 @@
 #include "networking.h"
 #include <string.h>
 
+
+
+//this structure describes a single 'frame' / message from a player.
 struct PlayerState {
 	int  ID;
 	int  State;
@@ -12,18 +15,27 @@ struct PlayerState {
 
 struct PlayerState PLAYERS[2];
 int client_sockets[2] = {-1, -1};
+/*
+   int process(char *buff, struct PlayerState *p)
 
+   takes a buffer (sent by a client) and a pointer to an empty player state struct and populates it.
+   Returns 1 if all neccesary information is present, and 0 otherwise.
+
+*/
 int process(char *buff, struct PlayerState *p) {
-    int parsed = sscanf(buff, "%d %d %d %f %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y), &(p->rot));
-    return (parsed == 6); // checks
+	int parsed = sscanf(buff, "%d %d %d %f %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y), &(p->rot));
+	return (parsed == 6); // checks
 }
+
 int main(int argc, char *argv[]) { 
 	int listen_socket;// = server_setup();
 
 	if(argc > 2){
+		//if run by server_launcher
 		client_sockets[0] = atoi(argv[1]);
 		client_sockets[1] = atoi(argv[2]);
 	}else{
+		//if run standalone
 		listen_socket = server_setup();
 		printf("Listen socket: %d\n", listen_socket);
 		printf("Waiting for 2 players...\n");
@@ -74,25 +86,27 @@ int main(int argc, char *argv[]) {
 					} else {
 						inbuf[n] = '\0';
 						if(process(inbuf, &PLAYERS[i])){
-						printf("Player %d: ID=%d State=%d HP=%d x=%.2f y=%.2f\n rot=%.2f", 
-								i, PLAYERS[i].ID, PLAYERS[i].State, 
-								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y, PLAYERS[i].rot);
-						if(PLAYERS[i].State == 3){
-							//	PLAYERS[i+1%2].x = 1000000; //to narnia..
-						}
-						for (int j = 0; j < 2; j++) {
-							if (j != i && client_sockets[j] != -1) {
-								n = send(client_sockets[j], inbuf, n, 0);
-								printf("sent to player %d: %d bytes\n", i, n);
+							printf("Player %d: ID=%d State=%d HP=%d x=%.2f y=%.2f\n rot=%.2f", 
+									i, PLAYERS[i].ID, PLAYERS[i].State, 
+									PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y, PLAYERS[i].rot);
+							if(PLAYERS[i].State == 3){
+								//	PLAYERS[i+1%2].x = 1000000; //to narnia..
+							}
+							for (int j = 0; j < 2; j++) {
+								//foward the information to whichever client DIDN'T send it
+								if (j != i && client_sockets[j] != -1) {
+									n = send(client_sockets[j], inbuf, n, 0);
+									printf("sent to player %d: %d bytes\n", i, n);
+								}
 							}
 						}
-					}
 					}
 				}
 			}
 		}
 		for (int i = 0; i < 2; i++) {
 			if (PLAYERS[i].HP <= 0 &&PLAYERS[i].ID!=0) {
+				//exit - server launcher can reap the code to tell which client won because it knows the order it passed in client descriptors.
 				exit(1 - i); 
 			}
 		}
