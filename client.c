@@ -10,7 +10,7 @@
 #include "util/main.h"
 #include <signal.h>
 #include "net/networking.h"
-#define SCREEN_WIDTH 620
+#define SCREEN_WIDTH 720
 #define SCREEN_HEIGHT 480
 
 int player_id;
@@ -20,7 +20,9 @@ int state = 0;
 float x_max = 3.5f;
 int killed = 0;
 
-
+int ghosts_mode = 0;
+float ghost_x = 32.0f;
+float ghost_y = 32.0f;
 
 char* IP = "127.0.0.1";
 
@@ -53,12 +55,8 @@ void send_player_state(int server_socket, int id, int shooting, int hp, float x,
 	//printf("Sent %d bytes: %s\n", sent, buff);
 }
 
-void net_setup(int passed_socket){
-	if (passed_socket >= 0) {
-		server_socket = passed_socket;
-	} else {
+void net_setup(char * IP){
 		server_socket = client_tcp_handshake(IP);
-	}
 }
 //NET
 void wait_for_game_start() {
@@ -200,7 +198,7 @@ void main_loop()
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 			SDL_RenderClear(renderer);
 			SDL_RenderPresent(renderer);
-			usleep(500000);
+			usleep(2000000);
 			exit(0);
 		}
 
@@ -208,75 +206,65 @@ void main_loop()
 
 		//enemy pos.
 		for(int i = 0; i<64; i++){
+	for(int j = 0; j < 64; j++){
+		if(test_arr[i][j] == 'E'){
+			test_arr[i][j] = 0;
+			break;
+		}
+	}
+}
+
+if(ghosts_mode) {
+	float dx = p.x - ghost_x;
+	float dy = p.y - ghost_y;
+	float dist = sqrtf(dx*dx + dy*dy);
+	if(dist < 1.0f) {
+		hp -= 50;
+		ghost_x = rand() % 64;
+		ghost_y = rand() % 64;
+	} else {
+		float step = 0.05f;
+		ghost_x += (dx / dist) * step;
+		ghost_y += (dy / dist) * step;
+	}
+	if(state == 3) {
+		ghost_x = rand() % 64;
+		ghost_y = rand() % 64;
+		score += 10;
+	}
+	test_arr[(int)ghost_y][(int)ghost_x] = 'E';
+} else {
+	char recvbuf[BUFFER_SIZE];
+	int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
+	int other_id, other_state, other_hp;
+	float other_rot;
+	float other_x, other_y;
+	other_x = 0;
+	if (n > 0 && other_x < 64) {
+		sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
+		
+		if(other_hp <= 0){
+			killed = 1;
+			state = 5;
+			for(int i = 0; i < 64; i++){
 				for(int j = 0; j < 64; j++){
 					if(test_arr[i][j] == 'E'){
-						test_arr[i][j] = 0; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
+						test_arr[i][j] = 0;
 						break;
 					}
 				}
 			}
-
-
-
-		char recvbuf[BUFFER_SIZE];
-		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
-		int other_id, other_state, other_hp;
-		float other_rot;
-		float other_x, other_y;
-		other_x = 0; // dep from teleporter death method
-		if (n > 0 && other_x < 64) {
-			//parse
-			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
-			
-			if(other_hp <= 0){
-				killed = 1;
-				state = 5;
-				for(int i = 0; i < 64; i++){
-					for(int j = 0; j < 64; j++){
-						if(test_arr[i][j] == 'E'){
-							test_arr[i][j] = 0;
-							break;
-						}
-					}
-				}
-			} else {
-				if(other_state == 3){
-					hp -= 50;
-				}			
-				if(other_x < 64 && other_y < 64){
-					test_arr[(int)other_y][(int)other_x] = 'E';
-				}
+		} else {
+			if(other_state == 3){
+				hp -= 50;
+			}			
+			if(other_x < 64 && other_y < 64){
+				test_arr[(int)other_y][(int)other_x] = 'E';
 			}
-			//texture setup
-			/*
-			   SDL_Surface *sprite_surface = SDL_LoadBMP("enemy.bmp");
-			   SDL_Texture *enemy_texture = SDL_CreateTextureFromSurface(renderer, sprite_surface);
-			   SDL_FreeSurface(sprite_surface);
-
-			//scaling and pos
-			float dx = other_x - p.x;
-			float dy = other_y - p.y;
-			float angle = atan2f(dy, dx) - p.state;
-			angle = fmodf(angle + M_PI, 2 * M_PI) - M_PI;
-
-			if (fabsf(angle) < HALF_FOV) {
-			float dist = sqrtf(dx*dx + dy*dy);
-			int sprite_height = (int)((SCREEN_HEIGHT / 2.0f) * x_max / fmaxf(dist, 0.1f));
-			int sprite_width = sprite_height;
-			int x = (int)((angle / HALF_FOV + 1.0f) * 0.5f * SCREEN_WIDTH);
-
-			SDL_Rect dest = {
-			x - sprite_width/2,
-			SCREEN_HEIGHT/2 - sprite_height,
-			sprite_width,
-			sprite_height * 2
-			};
-
-			SDL_RenderCopy(renderer, enemy_texture, NULL, &dest);
-
-			}
-			*/
 		}
+	}
+}
+
 		SDL_Surface *gun_surface = SDL_LoadBMP("gun.bmp");
 		SDL_Texture *gun_texture = SDL_CreateTextureFromSurface(renderer, gun_surface);
 		SDL_FreeSurface(gun_surface);
@@ -286,6 +274,10 @@ void main_loop()
 			100,
 			100
 		};
+
+
+
+		
 		SDL_RenderCopy(renderer, gun_texture, NULL, &destG);
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
@@ -296,7 +288,7 @@ void main_loop()
 		TTF_Font * sans = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
 		SDL_Color White = {255,255,255};
 		char message[100] = {0};
-		snprintf(message, 100, "Hp: %d pid: %d", hp, getpid());
+		snprintf(message, 100, ghosts_mode ? "Hp: %d Score: %d" : "Hp: %d pid: %d", hp, ghosts_mode ? score : getpid());
 		SDL_Surface * surfaceMessage = TTF_RenderText_Solid(sans, message, White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);		      
 		SDL_Rect destT = {
@@ -306,7 +298,7 @@ void main_loop()
 			30 
 		};
 		SDL_RenderCopy(renderer, Message, NULL, &destT);
-		send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
+		if(!ghosts_mode) send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.state);
 		SDL_RenderPresent(renderer);	
 		SDL_DestroyTexture(Message);
 		SDL_FreeSurface(surfaceMessage);
@@ -323,12 +315,17 @@ void main_loop()
 
 int main(int argc, char * argv[]){
 	signal(SIGINT, cleanup);
-	int passed_socket = -1;
 	if(argc > 1) {
-		passed_socket = atoi(argv[1]);
+		if(strcmp(argv[1], "ghosts") == 0) {
+			ghosts_mode = 1;
+		} else {
+			IP = argv[1];
+		}
 	}
-	net_setup(passed_socket);
-	wait_for_game_start();
+	if(!ghosts_mode) {
+		net_setup(IP);
+		wait_for_game_start();
+	}
 	TTF_Init();
 	player_id = getpid();
 	main_loop();
