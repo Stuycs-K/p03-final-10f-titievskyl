@@ -17,8 +17,8 @@ A description of your technical design. This should include:
 How you will be using the topics covered in class in the project.
      
 How you are breaking down the project and who is responsible for which parts.
-The client side will use *memory allocation* and *signals* to handle IO, quitting, and graphics. It will also *network through sockets to a server*. The server will exec and fork subservers, and generate bot processes, linked through *Interprocess communication* 
-The clients send position data to the server which uses a *non-blocking select* to check for positional updates each tick. The server then updates a ledger of a predetermined gameboard and shares the positions of each other player to each client, which can then update their drawing process.     
+The client side will use *memory allocation* and *signals* to handle IO, quitting, and graphics. It will also *network through sockets to a server*. The server will exec and fork subservers.    
+The clients send position data to the server which uses a *non-blocking select* to check for positional and state updates each tick.      The server then redistributes the position data to players so they can draw them on screen     the server can also exit and be reaped by its parent matchmaking/tournament server to start the next round of a tournament      The tournament server works by mapping each client to a descriptor and having its children exit with the index of the descriptor who won, allowing a tournament to be made by making contestants wait for the server to give the OK and then forking a new subserver and passing clients from the lobby into the game.
 
 # Intended pacing:
 FPS Core already completed
