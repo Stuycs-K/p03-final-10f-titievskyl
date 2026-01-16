@@ -5,7 +5,7 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-
+#include <fcntl.h>
 #include "util/ray.h"
 #include "util/main.h"
 #include <signal.h>
@@ -50,7 +50,7 @@ void send_player_state(int server_socket, int id, int shooting, int hp, float x,
 	char buff[BUFFER_SIZE];
 	snprintf(buff, BUFFER_SIZE, "%d %d %d %f %f %f", id, shooting, hp, x, y, rot);
 	int sent = send(server_socket, buff, strlen(buff), 0);
-	printf("Sent %d bytes: %s\n", sent, buff);
+	//printf("Sent %d bytes: %s\n", sent, buff);
 }
 
 void net_setup(int passed_socket){
@@ -68,16 +68,20 @@ void wait_for_game_start() {
 	name[strcspn(name, "\n")] = 0;
 	send(server_socket, name, strlen(name), 0);
 
-	char buf[256];
+	char buf[1024];
 	while (1) {
-		int n = recv(server_socket, buf, 255, 0);
-		if (n > 0) {
-			buf[n] = 0;
-			if (strstr(buf, "START")) {
-				break;
-			}
-			printf("%s", buf);
-			fflush(stdout);
+		int n = recv(server_socket, buf, sizeof(buf) - 1, 0);
+		if (n <= 0) exit(0);
+		buf[n] = 0;
+		printf("%s", buf);
+		fflush(stdout);
+
+		if (strstr(buf, "START")) {
+			int flags = fcntl(server_socket, F_GETFL, 0);
+			fcntl(server_socket, F_SETFL, flags | O_NONBLOCK);
+			while (recv(server_socket, buf, sizeof(buf), 0) > 0); 
+			fcntl(server_socket, F_SETFL, flags); // blocking
+			break; 
 		}
 	}
 }

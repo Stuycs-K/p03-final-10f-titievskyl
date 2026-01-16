@@ -63,38 +63,76 @@ int main(int argc, char *argv[]) {
 
 	} else if (num_players == 4) {
 		int winners[2];
+		int status;
 
-		char start1[] = "START\n";
-		send(players[0].socket, start1, strlen(start1), 0);
-		send(players[1].socket, start1, strlen(start1), 0);
+
+		printf("Starting Semifinal A...\n");
+		send(players[0].socket, "START\n", 6, 0);
+		send(players[1].socket, "START\n", 6, 0);
+		send(players[2].socket, "Waiting for Semifinal A to finish...\n", 37, 0);
+		send(players[3].socket, "Waiting for Semifinal A to finish...\n", 37, 0);
 
 		if (fork() == 0) {
 			close(listen_socket);
+			close(players[2].socket);
+			close(players[3].socket);
 			dup2(players[0].socket, 3);
 			dup2(players[1].socket, 4);
 			execl("./server", "./server", "3", "4", NULL);
 			exit(1);
 		}
-		int status;
 		wait(&status);
-		winners[0] = WEXITSTATUS(status);
+		winners[0] = WEXITSTATUS(status); // 0 or 1
 
-		char start2[] = "START\n";
-		send(players[2].socket, start2, strlen(start2), 0);
-		send(players[3].socket, start2, strlen(start2), 0);
+
+		int loser1 = 1 - winners[0];
+		send(players[loser1].socket, "You lost. Game Over.\n", 21, 0);
+		close(players[loser1].socket);
+
+		// --- MATCH 2: Semifinal B (Player 2 vs Player 3) ---
+		printf("Starting Semifinal B...\n");
+		send(players[2].socket, "START\n", 6, 0);
+		send(players[3].socket, "START\n", 6, 0);
+		send(players[winners[0]].socket, "You won! Waiting for Semifinal B...\n", 36, 0);
 
 		if (fork() == 0) {
 			close(listen_socket);
+			close(players[winners[0]].socket);
 			dup2(players[2].socket, 3);
 			dup2(players[3].socket, 4);
 			execl("./server", "./server", "3", "4", NULL);
 			exit(1);
 		}
 		wait(&status);
+
 		winners[1] = 2 + WEXITSTATUS(status);
 
+		int loser2 = (winners[1] == 2) ? 3 : 2;
+		send(players[loser2].socket, "You lost. Game Over.\n", 21, 0);
+		close(players[loser2].socket);
+
+		printf("Starting Grand Finals: Player %s vs Player %s\n", 
+				players[winners[0]].name, players[winners[1]].name);
+
+		// Final "START" signal for the finalists
+		send(players[winners[0]].socket, "START\n", 6, 0);
+		send(players[winners[1]].socket, "START\n", 6, 0);
+
+		if (fork() == 0) {
+			close(listen_socket);
+			dup2(players[winners[0]].socket, 3);
+			dup2(players[winners[1]].socket, 4);
+			execl("./server", "./server", "3", "4", NULL);
+			exit(1);
+		}
+		wait(&status);
+
+		int champion_idx = (WEXITSTATUS(status) == 1) ? winners[0] : winners[1];
+		printf("Tournament Over! Winner: %s\n", players[champion_idx].name);
+
+		close(players[winners[0]].socket);
+		close(players[winners[1]].socket);
 		close(listen_socket);
 	}
-
 	return 0;
 }

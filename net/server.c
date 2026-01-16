@@ -13,11 +13,10 @@ struct PlayerState {
 struct PlayerState PLAYERS[2];
 int client_sockets[2] = {-1, -1};
 
-void process(char *buff, struct PlayerState *p) {
-	int parsed = sscanf(buff, "%d %d %d %f %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y), &(p->rot));
-	printf("Parsed %d fields from: %s\n", parsed, buff);
+int process(char *buff, struct PlayerState *p) {
+    int parsed = sscanf(buff, "%d %d %d %f %f %f", &(p->ID), &(p->State), &(p->HP), &(p->x), &(p->y), &(p->rot));
+    return (parsed == 6); // checks
 }
-
 int main(int argc, char *argv[]) { 
 	int listen_socket;// = server_setup();
 
@@ -74,7 +73,7 @@ int main(int argc, char *argv[]) {
 						client_sockets[i] = -1;
 					} else {
 						inbuf[n] = '\0';
-						process(inbuf, &PLAYERS[i]);
+						if(process(inbuf, &PLAYERS[i])){
 						printf("Player %d: ID=%d State=%d HP=%d x=%.2f y=%.2f\n rot=%.2f", 
 								i, PLAYERS[i].ID, PLAYERS[i].State, 
 								PLAYERS[i].HP, PLAYERS[i].x, PLAYERS[i].y, PLAYERS[i].rot);
@@ -87,6 +86,7 @@ int main(int argc, char *argv[]) {
 								printf("sent to player %d: %d bytes\n", i, n);
 							}
 						}
+					}
 					}
 				}
 			}
