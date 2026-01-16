@@ -349,9 +349,6 @@ void main_loop()
 		free(scan);
 		handle_input(&p, 1.0f, .1f, millis, keystate, &running);
 
-
-
-
 		TTF_Font * sans = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
 		SDL_Color White = {255,255,255};
 		char message[100] = {0};
@@ -364,6 +361,7 @@ void main_loop()
 			300, 
 			30 
 		};
+
 		SDL_RenderCopy(renderer, Message, NULL, &destT);
 		if(!ghosts_mode) send_player_state(server_socket, player_id,state, hp, p.x, p.y, p.rot);
 		SDL_RenderPresent(renderer);	
