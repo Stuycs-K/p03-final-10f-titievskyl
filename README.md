@@ -32,7 +32,7 @@ https://drive.google.com/file/d/1YmZWl_wYSF0rYawJ0ZFEK1MI499QZpSn/view?usp=shari
             
 ### Resources/ References:     
       
-(https://wiki.libsdl.org/SDL2/FrontPage)           
+(https://wiki.libsdl.org/SDL2/FrontPage)           SDL2 and SDL2-TTF used.      sudo apt install libsdl2-dev       sudo apt install libsdl2-ttf-dev
 
        
 Video images:     
