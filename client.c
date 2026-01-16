@@ -292,13 +292,13 @@ void main_loop()
 		TTF_Font * sans = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
 		SDL_Color White = {255,255,255};
 		char message[100] = {0};
-		snprintf(message, 100, "Hp: %d", hp);
+		snprintf(message, 100, "Hp: %d pid: %d", hp, getpid());
 		SDL_Surface * surfaceMessage = TTF_RenderText_Solid(sans, message, White);
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);		      
 		SDL_Rect destT = {
 			100,
 			100,
-			100, 
+			300, 
 			30 
 		};
 		SDL_RenderCopy(renderer, Message, NULL, &destT);
