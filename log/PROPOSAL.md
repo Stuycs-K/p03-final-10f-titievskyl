@@ -8,7 +8,9 @@ Design a 3D, tournament/arena style FPS game with support for local multiplayer 
 
 # Intended usage:
 
-The player will navigate into tournaments/servers through a menu with keyboard inputs, and then play the game with keyboard inputs.
+The player will navigate into tournaments/servers through a menu with keyboard inputs, and then play the game with keyboard inputs.      
+The player can choose to duel in a 1v1, take part in a 4 person tournament, or fight endless waves of ghosts.      
+Command line prompts will be used for some things, like setting your name in a tournament.     
   
 # Technical Details:
 
