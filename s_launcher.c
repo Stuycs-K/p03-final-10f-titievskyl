@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 		send(players[loser1].socket, "You lost. Game Over.\n", 21, 0);
 		close(players[loser1].socket);
 
-		// --- MATCH 2: Semifinal B (Player 2 vs Player 3) ---
+
 		printf("Starting Semifinal B...\n");
 		send(players[2].socket, "START\n", 6, 0);
 		send(players[3].socket, "START\n", 6, 0);

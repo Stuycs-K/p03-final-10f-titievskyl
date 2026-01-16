@@ -207,6 +207,17 @@ void main_loop()
 
 
 		//enemy pos.
+		for(int i = 0; i<64; i++){
+				for(int j = 0; j < 64; j++){
+					if(test_arr[i][j] == 'E'){
+						test_arr[i][j] = 0; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
+						break;
+					}
+				}
+			}
+
+
+
 		char recvbuf[BUFFER_SIZE];
 		int n = recv(server_socket, recvbuf, BUFFER_SIZE, MSG_DONTWAIT);
 		int other_id, other_state, other_hp;
@@ -216,14 +227,7 @@ void main_loop()
 		if (n > 0 && other_x < 64) {
 			//parse
 			sscanf(recvbuf, "%d %d %d %f %f %f", &other_id, &other_state, &other_hp, &other_x, &other_y, &other_rot);
-			for(int i = 0; i<64; i++){
-				for(int j = 0; j < 64; j++){
-					if(test_arr[i][j] == 'E'){
-						test_arr[i][j] = 0; //draw over old pos. n enemy packets = n resets, only one recv per cycle.
-						break;
-					}
-				}
-			}
+			
 			if(other_hp <= 0){
 				killed = 1;
 				state = 5;
