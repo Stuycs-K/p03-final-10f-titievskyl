@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	for (int t = 10; t > 0; t--) {
+	for (int t = 3; t > 0; t--) {
 		char msg[32];
 		snprintf(msg, 32, "Starting in %d...\n", t);
 		for (int i = 0; i < num_players; i++) {
@@ -46,12 +46,11 @@ int main(int argc, char *argv[]) {
 		sleep(1);
 	}
 
-	char start[] = "START\n";
-	for (int i = 0; i < num_players; i++) {
-		send(players[i].socket, start, strlen(start), 0);
-	}
-
 	if (num_players == 2) {
+		char start[] = "START\n";
+		send(players[0].socket, start, strlen(start), 0);
+		send(players[1].socket, start, strlen(start), 0);
+
 		if (fork() == 0) {
 			close(listen_socket);
 			dup2(players[0].socket, 3);
@@ -59,66 +58,43 @@ int main(int argc, char *argv[]) {
 			execl("./server", "./server", "3", "4", NULL);
 			exit(1);
 		}
-		close(players[0].socket);
-		close(players[1].socket);
-		close(listen_socket);
 		wait(NULL);
+		close(listen_socket);
+
 	} else if (num_players == 4) {
-    int winners[2];
-    
-    char msg1[] = "Match 1 starting...\n";
-    send(players[0].socket, msg1, strlen(msg1), 0);
-    send(players[1].socket, msg1, strlen(msg1), 0);
-    
-    if (fork() == 0) {
-        close(listen_socket);
-        dup2(players[0].socket, 3);
-        dup2(players[1].socket, 4);
-        execl("./server", "./server", "3", "4", NULL);
-        exit(1);
-    }
-    int status;
-    wait(&status);
-    winners[0] = WEXITSTATUS(status);
-    
-    char advance[64];
-    snprintf(advance, 64, "You advance to finals!\n");
-    send(players[winners[0]].socket, advance, strlen(advance), 0);
-    
-    char msg2[] = "Match 2 starting...\n";
-    send(players[2].socket, msg2, strlen(msg2), 0);
-    send(players[3].socket, msg2, strlen(msg2), 0);
-    
-    if (fork() == 0) {
-        close(listen_socket);
-        dup2(players[2].socket, 3);
-        dup2(players[3].socket, 4);
-        execl("./server", "./server", "3", "4", NULL);
-        exit(1);
-    }
-    wait(&status);
-    winners[1] = 2 + WEXITSTATUS(status);
-    
-    snprintf(advance, 64, "You advance to finals!\n");
-    send(players[winners[1]].socket, advance, strlen(advance), 0);
-    
-    sleep(3);
-    
-    char finals[] = "Finals starting...\n";
-    send(players[winners[0]].socket, finals, strlen(finals), 0);
-    send(players[winners[1]].socket, finals, strlen(finals), 0);
-    
-    if (fork() == 0) {
-        close(listen_socket);
-        dup2(players[winners[0]].socket, 3);
-        dup2(players[winners[1]].socket, 4);
-        execl("./server", "./server", "3", "4", NULL);
-        exit(1);
-    }
-    wait(NULL);
-    
-    close(listen_socket);
-}
+		int winners[2];
+
+		char start1[] = "START\n";
+		send(players[0].socket, start1, strlen(start1), 0);
+		send(players[1].socket, start1, strlen(start1), 0);
+
+		if (fork() == 0) {
+			close(listen_socket);
+			dup2(players[0].socket, 3);
+			dup2(players[1].socket, 4);
+			execl("./server", "./server", "3", "4", NULL);
+			exit(1);
+		}
+		int status;
+		wait(&status);
+		winners[0] = WEXITSTATUS(status);
+
+		char start2[] = "START\n";
+		send(players[2].socket, start2, strlen(start2), 0);
+		send(players[3].socket, start2, strlen(start2), 0);
+
+		if (fork() == 0) {
+			close(listen_socket);
+			dup2(players[2].socket, 3);
+			dup2(players[3].socket, 4);
+			execl("./server", "./server", "3", "4", NULL);
+			exit(1);
+		}
+		wait(&status);
+		winners[1] = 2 + WEXITSTATUS(status);
+
+		close(listen_socket);
+	}
 
 	return 0;
 }
