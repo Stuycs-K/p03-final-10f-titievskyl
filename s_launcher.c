@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sys/wait.h>
 
+
+// this struct describes a client's connection and state before it's passed into a server.
 struct Player {
 	int socket;
 	char name[32];
@@ -12,6 +14,7 @@ struct Player {
 };
 
 int main(int argc, char *argv[]) {
+	//no arguments --> 1 v 1
 	int num_players = 2;
 	if (argc > 1) num_players = atoi(argv[1]);
 
@@ -36,7 +39,7 @@ int main(int argc, char *argv[]) {
 			send(players[j].socket, roster, strlen(roster), 0);
 		}
 	}
-
+	//countdown
 	for (int t = 3; t > 0; t--) {
 		char msg[32];
 		snprintf(msg, 32, "Starting in %d...\n", t);
@@ -45,12 +48,12 @@ int main(int argc, char *argv[]) {
 		}
 		sleep(1);
 	}
-
+	//send the "START" keyword -- this exits a blocking check on the client side.
 	if (num_players == 2) {
 		char start[] = "START\n";
 		send(players[0].socket, start, strlen(start), 0);
 		send(players[1].socket, start, strlen(start), 0);
-
+		//control which descriptors go to the server
 		if (fork() == 0) {
 			close(listen_socket);
 			dup2(players[0].socket, 3);
@@ -82,6 +85,7 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 		wait(&status);
+		//exit status of server indicates which of the two descriptors passed in won
 		winners[0] = WEXITSTATUS(status); // 0 or 1
 
 
@@ -129,7 +133,7 @@ int main(int argc, char *argv[]) {
 
 		int champion_idx = (WEXITSTATUS(status) == 1) ? winners[0] : winners[1];
 		printf("Tournament Over! Winner: %s\n", players[champion_idx].name);
-
+		usleep(3000000);
 		close(players[winners[0]].socket);
 		close(players[winners[1]].socket);
 		close(listen_socket);
