@@ -3,11 +3,7 @@
 #include "main.h"
 #include "ray.h"
 
-//trig time
 
-//need to check walls from state-HALF_FOV to state+half_FOV
-//idea 1 naive check is to iterate through the world and check if the trig aligns
-//idea 2 sweep by angle and check from player out to the first non 0, works because distance is needed for drawing anyways
 
 struct hit * cast_rays(float theta, float x, float y, int world[LEVEL_HEIGHT][LEVEL_WIDTH], int num_rays, float phi){
 	struct hit *results = malloc(sizeof(struct hit) * num_rays);
@@ -48,5 +44,5 @@ struct hit * cast_rays(float theta, float x, float y, int world[LEVEL_HEIGHT][LE
 }
 
 struct hit * p_cast_rays(struct player *p, int world[LEVEL_HEIGHT][LEVEL_WIDTH], int num_rays){
-	return cast_rays(p->state, p->x, p->y, world, num_rays, HALF_FOV);
+	return cast_rays(p->rot, p->x, p->y, world, num_rays, HALF_FOV);
 }
