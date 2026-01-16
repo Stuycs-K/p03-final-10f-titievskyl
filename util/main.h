@@ -13,7 +13,7 @@ struct player{
 	float x;
 	float y;
 	char * inv; // for later
-	float state; //0 - 2PI.
+	float rot; //0 - 2PI.
 
 };
 
